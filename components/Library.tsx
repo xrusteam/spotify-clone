@@ -3,9 +3,25 @@
 import { TbPlaylist } from 'react-icons/tb';
 import { AiOutlinePlus } from 'react-icons/ai';
 import { useCallback } from 'react';
+import useAuthModal from '@/hooks/useAuthModal';
+import { useUser } from '@/hooks/useUser';
+import useUploadModal from '@/hooks/useUploadModal';
 
 const Library = () => {
-  const onClick = useCallback(() => {}, []);
+  const authModal = useAuthModal();
+  const uploadModal = useUploadModal();
+
+  const { user } = useUser();
+
+  const onClick = useCallback(() => {
+    if (!user) {
+      return authModal.onOpen();
+    }
+
+    // todo
+
+    return uploadModal.onOpen();
+  }, [authModal, uploadModal, user]);
   return (
     <div className="flex flex-col">
       <div className="flex items-center justify-between px-5 pt-4">
