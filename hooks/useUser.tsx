@@ -1,18 +1,19 @@
 import {
-  Subscription,
-  UserDetails,
-} from '@/types';
-import { User } from '@supabase/auth-helpers-nextjs';
-import {
-  useSessionContext,
-  useUser as useSupaUser,
-} from '@supabase/auth-helpers-react';
-import {
-  createContext,
-  useContext,
   useEffect,
   useState,
+  createContext,
+  useContext,
 } from 'react';
+import {
+  useUser as useSupaUser,
+  useSessionContext,
+  User,
+} from '@supabase/auth-helpers-react';
+
+import {
+  UserDetails,
+  Subscription,
+} from '@/types';
 
 type UserContextType = {
   accessToken: string | null;
@@ -38,11 +39,10 @@ export const MyUserContextProvider = (
     isLoading: isLoadingUser,
     supabaseClient: supabase,
   } = useSessionContext();
-
   const user = useSupaUser();
   const accessToken =
     session?.access_token ?? null;
-  const [isLoadingData, setIsLoadinData] =
+  const [isLoadingData, setIsloadingData] =
     useState(false);
   const [userDetails, setUserDetails] =
     useState<UserDetails | null>(null);
@@ -53,7 +53,7 @@ export const MyUserContextProvider = (
     supabase.from('users').select('*').single();
   const getSubscription = () =>
     supabase
-      .from('subscription')
+      .from('subscriptions')
       .select('*, prices(*, products(*))')
       .in('status', ['trialing', 'active'])
       .single();
@@ -65,8 +65,7 @@ export const MyUserContextProvider = (
       !userDetails &&
       !subscription
     ) {
-      setIsLoadinData(true);
-
+      setIsloadingData(true);
       Promise.allSettled([
         getUserDetails(),
         getSubscription(),
@@ -77,24 +76,22 @@ export const MyUserContextProvider = (
         if (
           userDetailsPromise.status ===
           'fulfilled'
-        ) {
+        )
           setUserDetails(
             userDetailsPromise.value
               .data as UserDetails
           );
-        }
 
         if (
           subscriptionPromise.status ===
           'fulfilled'
-        ) {
+        )
           setSubscription(
             subscriptionPromise.value
               .data as Subscription
           );
-        }
 
-        setIsLoadinData(false);
+        setIsloadingData(false);
       });
     } else if (
       !user &&
@@ -104,7 +101,7 @@ export const MyUserContextProvider = (
       setUserDetails(null);
       setSubscription(null);
     }
-  }, [isLoadingUser, user]);
+  }, [user, isLoadingUser]);
 
   const value = {
     accessToken,
@@ -124,12 +121,10 @@ export const MyUserContextProvider = (
 
 export const useUser = () => {
   const context = useContext(UserContext);
-
   if (context === undefined) {
     throw new Error(
-      'useUser must be used within a MyUserContextProvider'
+      `useUser must be used within a MyUserContextProvider.`
     );
   }
-
   return context;
 };
